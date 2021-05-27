@@ -4,16 +4,16 @@ example template for
 
 ## how to use project
 
-1. run `git submodule add git@github.com:wolffshots/esp32-component-template.git components/esp32-component-template` in your main project
+1. run `git submodule add git@github.com:wolffshots/esp32-webserver.git components/esp32-webserver` in your main project
 2. configure project if needed
-3. `#include "component-template.h"` should give you access to this component.
+3. `#include "webserver.h"` should give you access to this component.
 
-if the above steps don't work then you may need to run `git submodule init components/esp32-component-template`
+if the above steps don't work then you may need to run `git submodule init components/esp32-webserver`
 and then `git submodule update --remote --recursive` in your main project
 
 ## folder contents
 
-the component **esp32-component-template** contains three source files in C lang: [component-template.c](component-template.c). this file is located in root folder.
+the component **esp32-webserver** contains three source files in C lang: [webserver.c](webserver.c). this file is located in root folder.
 
 esp-idf projects are build using cmake. the project build configuration is contained in `CMakeLists.txt` files that provide set of directives and instructions describing the project's source files and targets (executable, library, or both).
 
@@ -25,10 +25,10 @@ below is short explanation of remaining files in the project folder.
 │   ├── .gitignore              ignore directive for generated docs
 │   └── Doxyfile                instructions for doxygen to produce documentation
 ├── include                     header file directory
-│   └── component-template.h    the main header file for this component
+│   └── webserver.h             the main header file for this component
 ├── .gitignore                  describes what files and folders git should ignore
 ├── CMakeLists.txt              base project cmake file (describes dependencies, include dir and src dir)
-├── component-template.c        core src file of the component
+├── webserver.c                 core src file of the component
 ├── component.mk                component make file
 ├── Kconfig.projbuild           kconfig description file to add build time vars
 ├── LICENSE.md                  MIT license file
