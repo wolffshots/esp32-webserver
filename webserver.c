@@ -28,7 +28,7 @@
  */
 
 // rest of the includes
-#include "component-template.h"
+#include "webserver.h"
 
 // variables
 
