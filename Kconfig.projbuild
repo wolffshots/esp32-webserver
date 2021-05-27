@@ -1,0 +1,8 @@
+# config vars for esp32-component-template
+menu "wolffshots/esp32-component-template config"
+    config COMPONENT_TAG
+        string "component-template tag"
+        default "esp32-component-template"
+        help
+            tag for use with esp log library for component-template library
+endmenu
