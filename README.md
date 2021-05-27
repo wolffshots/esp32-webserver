@@ -1,4 +1,4 @@
-# esp32-component
+# esp32-webserver
 
 example template for
 
