@@ -1,6 +1,6 @@
 # esp32-webserver
 
-example template for
+this is a specific example of a webserver for my warm-water project
 
 ## how to use project
 

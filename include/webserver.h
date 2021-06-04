@@ -30,12 +30,24 @@
 #ifndef COMPONENT_TEMPLATE_H
 #define COMPONENT_TEMPLATE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
 // includes pertinent to this file
+#include "esp_err.h"
+#include "esp_http_server.h"
 
 // defines
-#define EXAMPLE_DEFINE 1
+#define IS_FILE_EXT(filename, ext) \
+    (strcasecmp(&filename[strlen(filename) - sizeof(ext) + 1], ext) == 0)
+// extern float goal
 
 // function declarations
-int example(float par);
+esp_err_t start_file_server(const char *base_path);
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif // COMPONENT_TEMPLATE_H
