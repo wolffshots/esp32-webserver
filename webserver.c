@@ -119,6 +119,7 @@ static esp_err_t favicon_get_handler(httpd_req_t *req)
     httpd_resp_send(req, (const char *)favicon_ico_start, favicon_ico_size);
     return ESP_OK;
 }
+
 /* Set HTTP response content type according to file extension */
 static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filename)
 {
@@ -158,14 +159,20 @@ off_t ws_get_file_size(const char *filename)
 
 static esp_err_t http_resp_index_html(httpd_req_t *req, const char *dirpath)
 {
-    /* Get handle to embedded file upload script */
     extern const unsigned char index_start[] asm("_binary_index_html_start");
     extern const unsigned char index_end[] asm("_binary_index_html_end");
     const size_t index_size = (index_end - index_start);
-
-    /* Add file upload form and script which on execution sends a POST request to /upload */
     httpd_resp_send_chunk(req, (const char *)index_start, index_size);
-
+    httpd_resp_sendstr_chunk(req, NULL);
+    return ESP_OK;
+}
+static esp_err_t http_resp_style_css(httpd_req_t *req, const char *dirpath)
+{
+    extern const unsigned char style_start[] asm("_binary_style_css_start");
+    extern const unsigned char style_end[] asm("_binary_style_css_end");
+    const size_t style_size = (style_end - style_start);
+    httpd_resp_set_type(req, "text/css");
+    httpd_resp_send_chunk(req, (const char *)style_start, style_size);
     httpd_resp_sendstr_chunk(req, NULL);
     return ESP_OK;
 }
@@ -193,7 +200,12 @@ static esp_err_t download_get_handler(httpd_req_t *req)
     {
         return http_resp_index_html(req, filepath);
     }
-
+    // handle style route
+    if (strcmp(filename, "/style.css") == 0)
+    {
+        return http_resp_style_css(req, filepath);
+    }
+    // handle specifics and 404
     if (stat(filepath, &file_stat) == -1)
     {
         /* If file not present on SPIFFS check if URI
@@ -282,11 +294,29 @@ static esp_err_t api_post_handler(httpd_req_t *req)
 
     ESP_LOGI(TAG, "post received with content: %s", content);
 
-    // check uri and call function with (content)
-    if(strcmp(req->uri, "/api/set_temp") != 0){
-        // set new temp
-        // atof(content);
-        // goal = 300.00;
+    if (strcmp(req->uri, "/api/set_temp") == 0)
+    {
+        goal = atof(content);
+        ESP_LOGI(TAG, "new goal as float: %0.2f", atof(content));
+        update_display();
+    }
+    else if (strcmp(req->uri, "/api/set_upper_margin") == 0)
+    {
+        over = atof(content);
+        ESP_LOGI(TAG, "new over as float: %0.2f", atof(content));
+        update_display();
+    }
+    else if (strcmp(req->uri, "/api/set_lower_margin") == 0)
+    {
+        under = atof(content);
+        ESP_LOGI(TAG, "new under as float: %0.2f", atof(content));
+        update_display();
+    }
+    else
+    {
+        ESP_LOGI(TAG, "post call to %s not handled by implemented checks, respond unsupported", req->uri);
+        httpd_resp_set_status(req, "501 Not Implemented");
+        httpd_resp_sendstr(req, "couldn't match that req to a server function");
     }
 
     /* Send a simple response */
