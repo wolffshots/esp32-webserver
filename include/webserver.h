@@ -42,6 +42,7 @@ extern "C"
 // defines
 #define IS_FILE_EXT(filename, ext) \
     (strcasecmp(&filename[strlen(filename) - sizeof(ext) + 1], ext) == 0)
+    extern volatile float temp;
     extern volatile float goal;
     extern volatile float under;
     extern volatile float over;

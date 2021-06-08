@@ -120,6 +120,17 @@ static esp_err_t favicon_get_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+/* font handler */
+static esp_err_t font_get_handler(httpd_req_t *req)
+{
+    extern const unsigned char font_ico_start[] asm("_binary_Ubuntu_woff2_start");
+    extern const unsigned char font_ico_end[] asm("_binary_Ubuntu_woff2_end");
+    const size_t font_ico_size = (font_ico_end - font_ico_start);
+    httpd_resp_set_type(req, "font/woff2");
+    httpd_resp_send(req, (const char *)font_ico_start, font_ico_size);
+    return ESP_OK;
+}
+
 /* Set HTTP response content type according to file extension */
 static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filename)
 {
@@ -166,6 +177,15 @@ static esp_err_t http_resp_index_html(httpd_req_t *req, const char *dirpath)
     httpd_resp_sendstr_chunk(req, NULL);
     return ESP_OK;
 }
+static esp_err_t http_resp_robots_txt(httpd_req_t *req, const char *dirpath)
+{
+    extern const unsigned char robots_start[] asm("_binary_robots_txt_start");
+    extern const unsigned char robots_end[] asm("_binary_robots_txt_end");
+    const size_t robots_size = (robots_end - robots_start);
+    httpd_resp_send_chunk(req, (const char *)robots_start, robots_size);
+    httpd_resp_sendstr_chunk(req, NULL);
+    return ESP_OK;
+}
 static esp_err_t http_resp_style_css(httpd_req_t *req, const char *dirpath)
 {
     extern const unsigned char style_start[] asm("_binary_style_css_start");
@@ -174,6 +194,17 @@ static esp_err_t http_resp_style_css(httpd_req_t *req, const char *dirpath)
     httpd_resp_set_type(req, "text/css");
     httpd_resp_send_chunk(req, (const char *)style_start, style_size);
     httpd_resp_sendstr_chunk(req, NULL);
+    return ESP_OK;
+}
+
+static esp_err_t update_get_handler(httpd_req_t *req)
+{
+    ESP_LOGD(TAG, "update received %s", req->uri);
+    httpd_resp_set_status(req, "200 OK");
+    httpd_resp_set_type(req, "text/html; charset=UTF-8");
+    char line[20];
+    sprintf(line, "%0.3f %0.1f %0.1f %0.1f", temp, goal, under, over);
+    httpd_resp_sendstr(req, line);
     return ESP_OK;
 }
 
@@ -205,6 +236,11 @@ static esp_err_t download_get_handler(httpd_req_t *req)
     {
         return http_resp_style_css(req, filepath);
     }
+    // handle robots
+    if (strcmp(filename, "/robots.txt") == 0)
+    {
+        return http_resp_robots_txt(req, filepath);
+    }
     // handle specifics and 404
     if (stat(filepath, &file_stat) == -1)
     {
@@ -217,6 +253,10 @@ static esp_err_t download_get_handler(httpd_req_t *req)
         else if (strcmp(filename, "/favicon.ico") == 0)
         {
             return favicon_get_handler(req);
+        }
+        else if (strcmp(filename, "/Ubuntu.woff2") == 0)
+        {
+            return font_get_handler(req);
         }
         ESP_LOGE(TAG, "Failed to stat file : %s", filepath);
         /* Respond with 404 Not Found */
@@ -374,6 +414,15 @@ esp_err_t start_file_server(const char *base_path)
         ESP_LOGE(TAG, "Failed to start file server!");
         return ESP_FAIL;
     }
+
+    /* URI handler for getting uploaded files */
+    httpd_uri_t update = {
+        .uri = "/update",
+        .method = HTTP_GET,
+        .handler = update_get_handler,
+        .user_ctx = server_data // Pass server data as context
+    };
+    httpd_register_uri_handler(server, &update);
 
     /* URI handler for getting uploaded files */
     httpd_uri_t file_download = {
