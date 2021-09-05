@@ -23,8 +23,8 @@
  */
 
 /**
- * @file component-template.c
- * @brief implementations for component component-template
+ * @file webserver.c
+ * @brief implementations for component webserver
  */
 
 // rest of the includes
@@ -110,24 +110,33 @@ static esp_err_t index_html_get_handler(httpd_req_t *req)
 /* Handler to respond with an icon file embedded in flash.
  * Browsers expect to GET website icon at URI /favicon.ico.
  * This can be overridden by uploading file with same name */
-static esp_err_t favicon_get_handler(httpd_req_t *req)
-{
-    extern const unsigned char favicon_ico_start[] asm("_binary_favicon_ico_start");
-    extern const unsigned char favicon_ico_end[] asm("_binary_favicon_ico_end");
-    const size_t favicon_ico_size = (favicon_ico_end - favicon_ico_start);
-    httpd_resp_set_type(req, "image/x-icon");
-    httpd_resp_send(req, (const char *)favicon_ico_start, favicon_ico_size);
-    return ESP_OK;
-}
+// static esp_err_t favicon_get_handler(httpd_req_t *req)
+// {
+//     extern const unsigned char favicon_ico_start[] asm("_binary_favicon_ico_start");
+//     extern const unsigned char favicon_ico_end[] asm("_binary_favicon_ico_end");
+//     const size_t favicon_ico_size = (favicon_ico_end - favicon_ico_start);
+//     httpd_resp_set_type(req, "image/x-icon");
+//     httpd_resp_send(req, (const char *)favicon_ico_start, favicon_ico_size);
+//     return ESP_OK;
+// }
 
 /* font handler */
+static esp_err_t font_regular_get_handler(httpd_req_t *req)
+{
+    extern const unsigned char font_regular_start[] asm("_binary_overpass_regular_otf_start");
+    extern const unsigned char font_regular_end[] asm("_binary_overpass_regular_otf_end");
+    const size_t font_regular_size = (font_regular_end - font_regular_start);
+    httpd_resp_set_type(req, "font/otf");
+    httpd_resp_send(req, (const char *)font_regular_start, font_regular_size);
+    return ESP_OK;
+}
 static esp_err_t font_get_handler(httpd_req_t *req)
 {
-    extern const unsigned char font_ico_start[] asm("_binary_Ubuntu_woff2_start");
-    extern const unsigned char font_ico_end[] asm("_binary_Ubuntu_woff2_end");
-    const size_t font_ico_size = (font_ico_end - font_ico_start);
-    httpd_resp_set_type(req, "font/woff2");
-    httpd_resp_send(req, (const char *)font_ico_start, font_ico_size);
+    extern const unsigned char font_start[] asm("_binary_overpass_otf_start");
+    extern const unsigned char font_end[] asm("_binary_overpass_otf_end");
+    const size_t font_size = (font_end - font_start);
+    httpd_resp_set_type(req, "font/otf");
+    httpd_resp_send(req, (const char *)font_start, font_size);
     return ESP_OK;
 }
 
@@ -186,13 +195,43 @@ static esp_err_t http_resp_robots_txt(httpd_req_t *req, const char *dirpath)
     httpd_resp_sendstr_chunk(req, NULL);
     return ESP_OK;
 }
-static esp_err_t http_resp_style_css(httpd_req_t *req, const char *dirpath)
+static esp_err_t http_resp_bundle_js(httpd_req_t *req, const char *dirpath)
 {
-    extern const unsigned char style_start[] asm("_binary_style_css_start");
-    extern const unsigned char style_end[] asm("_binary_style_css_end");
-    const size_t style_size = (style_end - style_start);
+    extern const unsigned char bundle_start[] asm("_binary_bundle_js_start");
+    extern const unsigned char bundle_end[] asm("_binary_bundle_js_end");
+    const size_t bundle_size = (bundle_end - bundle_start);
+    httpd_resp_set_type(req, "text/javascript");
+    httpd_resp_send_chunk(req, (const char *)bundle_start, bundle_size);
+    httpd_resp_sendstr_chunk(req, NULL);
+    return ESP_OK;
+}
+static esp_err_t http_resp_bundle_js_map(httpd_req_t *req, const char *dirpath)
+{
+    extern const unsigned char bundle_js_map_start[] asm("_binary_bundle_js_map_start");
+    extern const unsigned char bundle_js_map_end[] asm("_binary_bundle_js_map_end");
+    const size_t bundle_js_map_size = (bundle_js_map_end - bundle_js_map_start);
+    httpd_resp_set_type(req, "text/javascript");
+    httpd_resp_send_chunk(req, (const char *)bundle_js_map_start, bundle_js_map_size);
+    httpd_resp_sendstr_chunk(req, NULL);
+    return ESP_OK;
+}
+static esp_err_t http_resp_bundle_css(httpd_req_t *req, const char *dirpath)
+{
+    extern const unsigned char bundle_css_start[] asm("_binary_bundle_css_start");
+    extern const unsigned char bundle_css_end[] asm("_binary_bundle_css_end");
+    const size_t bundle_css_size = (bundle_css_end - bundle_css_start);
     httpd_resp_set_type(req, "text/css");
-    httpd_resp_send_chunk(req, (const char *)style_start, style_size);
+    httpd_resp_send_chunk(req, (const char *)bundle_css_start, bundle_css_size);
+    httpd_resp_sendstr_chunk(req, NULL);
+    return ESP_OK;
+}
+static esp_err_t http_resp_global_css(httpd_req_t *req, const char *dirpath)
+{
+    extern const unsigned char global_start[] asm("_binary_global_css_start");
+    extern const unsigned char global_end[] asm("_binary_global_css_end");
+    const size_t global_size = (global_end - global_start);
+    httpd_resp_set_type(req, "text/css");
+    httpd_resp_send_chunk(req, (const char *)global_start, global_size);
     httpd_resp_sendstr_chunk(req, NULL);
     return ESP_OK;
 }
@@ -231,16 +270,6 @@ static esp_err_t download_get_handler(httpd_req_t *req)
     {
         return http_resp_index_html(req, filepath);
     }
-    // handle style route
-    if (strcmp(filename, "/style.css") == 0)
-    {
-        return http_resp_style_css(req, filepath);
-    }
-    // handle robots
-    if (strcmp(filename, "/robots.txt") == 0)
-    {
-        return http_resp_robots_txt(req, filepath);
-    }
     // handle specifics and 404
     if (stat(filepath, &file_stat) == -1)
     {
@@ -250,13 +279,37 @@ static esp_err_t download_get_handler(httpd_req_t *req)
         {
             return index_html_get_handler(req);
         }
-        else if (strcmp(filename, "/favicon.ico") == 0)
-        {
-            return favicon_get_handler(req);
-        }
-        else if (strcmp(filename, "/Ubuntu.woff2") == 0)
+        if (strcmp(filename, "/overpass.otf") == 0)
         {
             return font_get_handler(req);
+        }
+        if (strcmp(filename, "/overpass-regular.otf") == 0)
+        {
+            return font_regular_get_handler(req);
+        }
+        // handle bundle js route
+        if (strcmp(filename, "/bundle.js") == 0)
+        {
+            return http_resp_bundle_js(req, filepath);
+        }
+        if (strcmp(filename, "/bundle.js.map") == 0)
+        {
+            return http_resp_bundle_js_map(req, filepath);
+        }
+        // handle bundle style route
+        if (strcmp(filename, "/bundle.css") == 0)
+        {
+            return http_resp_bundle_css(req, filepath);
+        }
+        // handle global style route
+        if (strcmp(filename, "/global.css") == 0)
+        {
+            return http_resp_global_css(req, filepath);
+        }
+        // handle robots
+        if (strcmp(filename, "/robots.txt") == 0)
+        {
+            return http_resp_robots_txt(req, filepath);
         }
         ESP_LOGE(TAG, "Failed to stat file : %s", filepath);
         /* Respond with 404 Not Found */
@@ -441,15 +494,6 @@ esp_err_t start_file_server(const char *base_path)
         .user_ctx = server_data // Pass server data as context
     };
     httpd_register_uri_handler(server, &api_post);
-
-    /* URI handler for deleting files from server */
-    // httpd_uri_t file_delete = {
-    //     .uri       = "/delete/*",   // Match all URIs of type /delete/path/to/file
-    //     .method    = HTTP_POST,
-    //     .handler   = delete_post_handler,
-    //     .user_ctx  = server_data    // Pass server data as context
-    // };
-    // httpd_register_uri_handler(server, &file_delete);
 
     return ESP_OK;
 }

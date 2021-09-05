@@ -23,12 +23,12 @@
  */
 
 /**
- * @file component-template.h
- * @brief defininitions for component-template
+ * @file webserver.h
+ * @brief defininitions for webserver
  */
 
-#ifndef COMPONENT_TEMPLATE_H
-#define COMPONENT_TEMPLATE_H
+#ifndef WEBSERVER_H
+#define WEBSERVER_H
 
 #ifdef __cplusplus
 extern "C"
@@ -55,4 +55,4 @@ extern "C"
 }
 #endif // __cplusplus
 
-#endif // COMPONENT_TEMPLATE_H
+#endif // WEBSERVER_H
